@@ -1,5 +1,8 @@
 # Simple and cheap omniwheel car
-Simple and cheap omniwheel car project detailed in this repository.
+Simple and cheap omniwheel car project detailed in this repository.  
+There are two version made for two different microcontrollers:
+ - ESP32 microcontroller
+ - Raspberry Pi SBC
 
 
 ## Bill of Materials
