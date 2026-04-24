@@ -1,4 +1,6 @@
 # Simple and cheap omniwheel car
+![Omniwheel car](docs/images/preview.png)
+
 Simple and cheap omniwheel car project detailed in this repository.  
 There are two version made for two different microcontrollers:
  - ESP32 microcontroller
