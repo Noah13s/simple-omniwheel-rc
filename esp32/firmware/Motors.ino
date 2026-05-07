@@ -8,8 +8,8 @@ struct MotorConfig {
 const MotorConfig motors[4] = {
   { 1, 2, true },     // Motor 0 (Left Front)
   { 41, 40, true },   // Motor 1 (Right Front)
-  { 38, 37, false },  // Motor 2 (Left Rear)
-  { 35, 0, false }    // Motor 3 (Right Rear)
+  { 39, 38, false },  // Motor 2 (Left Rear)
+  { 45, 48, false }    // Motor 3 (Right Rear)
 };
 
 #define PWM_FREQ 1000

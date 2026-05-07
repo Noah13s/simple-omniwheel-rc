@@ -5,6 +5,7 @@
 WebServer server(80);
 DNSServer dnsServer;
 const byte DNS_PORT = 53;
+volatile int currentFps = 0;
 
 void wifiSetup() {
   WiFi.softAP("RC-Controller");
@@ -13,6 +14,8 @@ void wifiSetup() {
   dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
 
   server.on("/", sendHtml);
+
+  server.on("/stream", handleStream);
 
   server.on("/servo", []() {
     int ch = server.arg("ch").toInt();
@@ -150,6 +153,44 @@ void wifiLoop() {
   server.handleClient();
 }
 
+void handleStream() {
+  WiFiClient client = server.client();
+
+  client.print("HTTP/1.1 200 OK\r\n");
+  client.print("Content-Type: " + String(_STREAM_CONTENT_TYPE) + "\r\n");
+  client.print("Access-Control-Allow-Origin: *\r\n");
+  client.print("\r\n");
+
+  int frameCount = 0;
+  unsigned long lastTime = millis();
+
+  while (client.connected()) {
+    camera_fb_t* fb = esp_camera_fb_get();
+    if (!fb) {
+      delay(100);
+      continue;
+    }
+
+    client.print(_STREAM_BOUNDARY);
+    char part_header[64];
+    snprintf(part_header, 64, _STREAM_PART, fb->len);
+    client.print(part_header);
+
+    client.write(fb->buf, fb->len);
+    client.print("\r\n");
+
+    esp_camera_fb_return(fb);
+
+    frameCount++;
+
+    if (millis() - lastTime >= 1000) {
+      currentFps = frameCount;
+      frameCount = 0;
+      lastTime = millis();
+      Serial.printf("Stream FPS: %d\n", currentFps);
+    }
+  }
+}
 void sendHtml() {
   float battery = getBatteryPercentage();
 
@@ -202,16 +243,36 @@ void sendHtml() {
   // Tab Logic
   function openTab(evt, tabName) {
     var i, tabcontent, tablinks;
+
     tabcontent = document.getElementsByClassName("tabcontent");
     for (i = 0; i < tabcontent.length; i++) {
       tabcontent[i].style.display = "none";
     }
+
     tablinks = document.getElementsByClassName("tablinks");
     for (i = 0; i < tablinks.length; i++) {
-      tablinks[i].className = tablinks[i].className.replace(" active", "");
+      tablinks[i].className =
+        tablinks[i].className.replace(" active", "");
     }
+
     document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
+
+    const cam = document.getElementById("cameraFeed");
+
+    if (tabName === "Camera") {
+
+      cam.style.display = "block";
+
+      // restart stream fresh every time
+      cam.src = "/stream?ts=" + Date.now();
+
+    } else {
+
+      // stop stream
+      cam.src = "";
+      cam.style.display = "none";
+    }
   }
 </script>
 <script>
@@ -499,6 +560,12 @@ void sendHtml() {
       
       <br>
       <small>Center servos manually if required</small>
+
+      <h3>Camera Feed</h3>
+
+      <img id="cameraFeed"
+          style="width:100%; max-width:600px; border-radius:10px; margin-bottom:15px; display:none;">
+
     </div>
 
   </div>

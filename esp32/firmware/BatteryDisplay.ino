@@ -1,7 +1,7 @@
 #include <TM1637Display.h>
 
 // Initialize the display
-TM1637Display display(6, 7);
+TM1637Display display(20, 19);
 
 void batteryDisplaySetup() {
   display.setBrightness(0x0f);
@@ -12,4 +12,5 @@ void batteryDisplayLoop() {
     float battery = getBatteryPercentage();
     int value = (int)battery;
     display.showNumberDec(value, false, 4, 0);
+    //Serial.printf("Battery: %d\n", value);
 }
